@@ -2,6 +2,10 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   generateBoard,
   toggleSquare,
+  markSquare,
+  unmarkSquare,
+  updateSquareName,
+  getMarkedConnections,
   checkBingo,
   getWinningSquareIds,
   type BingoSquareData,
@@ -214,6 +218,146 @@ describe('bingoLogic', () => {
       expect(result.has(12)).toBe(true);
       expect(result.has(18)).toBe(true);
       expect(result.has(24)).toBe(true);
+    });
+  });
+
+  describe('markSquare', () => {
+    let mockBoard: BingoSquareData[];
+
+    beforeEach(() => {
+      mockBoard = [
+        { id: 0, text: 'Q1', isMarked: false, isFreeSpace: false },
+        { id: 1, text: 'Q2', isMarked: true, isFreeSpace: false },
+        { id: 2, text: 'Free', isMarked: true, isFreeSpace: true },
+      ];
+    });
+
+    it('should mark square with name and timestamp', () => {
+      const newBoard = markSquare(mockBoard, 0, 'John Doe');
+      expect(newBoard[0].isMarked).toBe(true);
+      expect(newBoard[0].personName).toBe('John Doe');
+      expect(newBoard[0].timestamp).toBeGreaterThan(0);
+    });
+
+    it('should mark square without name', () => {
+      const newBoard = markSquare(mockBoard, 0);
+      expect(newBoard[0].isMarked).toBe(true);
+      expect(newBoard[0].personName).toBeUndefined();
+      expect(newBoard[0].timestamp).toBeGreaterThan(0);
+    });
+
+    it('should not modify free space', () => {
+      const newBoard = markSquare(mockBoard, 2, 'Test');
+      expect(newBoard[2].personName).toBeUndefined();
+    });
+
+    it('should return a new array', () => {
+      const newBoard = markSquare(mockBoard, 0, 'Test');
+      expect(newBoard).not.toBe(mockBoard);
+    });
+
+    it('should not modify other squares', () => {
+      const newBoard = markSquare(mockBoard, 0, 'Test');
+      expect(newBoard[1].isMarked).toBe(mockBoard[1].isMarked);
+      expect(newBoard[2].isMarked).toBe(mockBoard[2].isMarked);
+    });
+  });
+
+  describe('unmarkSquare', () => {
+    let mockBoard: BingoSquareData[];
+
+    beforeEach(() => {
+      mockBoard = [
+        { id: 0, text: 'Q1', isMarked: true, isFreeSpace: false, personName: 'John', timestamp: 123 },
+        { id: 1, text: 'Q2', isMarked: true, isFreeSpace: false },
+        { id: 2, text: 'Free', isMarked: true, isFreeSpace: true },
+      ];
+    });
+
+    it('should unmark square and remove name and timestamp', () => {
+      const newBoard = unmarkSquare(mockBoard, 0);
+      expect(newBoard[0].isMarked).toBe(false);
+      expect(newBoard[0].personName).toBeUndefined();
+      expect(newBoard[0].timestamp).toBeUndefined();
+    });
+
+    it('should not modify free space', () => {
+      const newBoard = unmarkSquare(mockBoard, 2);
+      expect(newBoard[2].isMarked).toBe(true);
+    });
+
+    it('should return a new array', () => {
+      const newBoard = unmarkSquare(mockBoard, 0);
+      expect(newBoard).not.toBe(mockBoard);
+    });
+  });
+
+  describe('updateSquareName', () => {
+    let mockBoard: BingoSquareData[];
+
+    beforeEach(() => {
+      mockBoard = [
+        { id: 0, text: 'Q1', isMarked: true, isFreeSpace: false, personName: 'John' },
+        { id: 1, text: 'Q2', isMarked: false, isFreeSpace: false },
+        { id: 2, text: 'Free', isMarked: true, isFreeSpace: true },
+      ];
+    });
+
+    it('should update name for marked square', () => {
+      const newBoard = updateSquareName(mockBoard, 0, 'Jane Doe');
+      expect(newBoard[0].personName).toBe('Jane Doe');
+    });
+
+    it('should not update name for unmarked square', () => {
+      const newBoard = updateSquareName(mockBoard, 1, 'Test');
+      expect(newBoard[1].personName).toBeUndefined();
+    });
+
+    it('should not update free space', () => {
+      const newBoard = updateSquareName(mockBoard, 2, 'Test');
+      expect(newBoard[2].personName).toBeUndefined();
+    });
+
+    it('should return a new array', () => {
+      const newBoard = updateSquareName(mockBoard, 0, 'Test');
+      expect(newBoard).not.toBe(mockBoard);
+    });
+  });
+
+  describe('getMarkedConnections', () => {
+    it('should return only marked non-free squares', () => {
+      const mockBoard: BingoSquareData[] = [
+        { id: 0, text: 'Q1', isMarked: true, isFreeSpace: false, personName: 'John' },
+        { id: 1, text: 'Q2', isMarked: false, isFreeSpace: false },
+        { id: 2, text: 'Free', isMarked: true, isFreeSpace: true },
+        { id: 3, text: 'Q3', isMarked: true, isFreeSpace: false },
+      ];
+      
+      const connections = getMarkedConnections(mockBoard);
+      expect(connections).toHaveLength(2);
+      expect(connections[0].id).toBe(0);
+      expect(connections[1].id).toBe(3);
+    });
+
+    it('should return empty array when no marked squares', () => {
+      const mockBoard: BingoSquareData[] = [
+        { id: 0, text: 'Q1', isMarked: false, isFreeSpace: false },
+        { id: 1, text: 'Q2', isMarked: false, isFreeSpace: false },
+      ];
+      
+      const connections = getMarkedConnections(mockBoard);
+      expect(connections).toHaveLength(0);
+    });
+
+    it('should exclude free space even if marked', () => {
+      const mockBoard: BingoSquareData[] = [
+        { id: 0, text: 'Free', isMarked: true, isFreeSpace: true },
+        { id: 1, text: 'Q1', isMarked: true, isFreeSpace: false },
+      ];
+      
+      const connections = getMarkedConnections(mockBoard);
+      expect(connections).toHaveLength(1);
+      expect(connections[0].id).toBe(1);
     });
   });
 });

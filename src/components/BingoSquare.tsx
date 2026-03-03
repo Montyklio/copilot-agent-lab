@@ -8,7 +8,7 @@ interface BingoSquareProps {
 
 export function BingoSquare({ square, isWinning, onClick }: BingoSquareProps) {
   const baseClasses =
-    'relative flex items-center justify-center p-2 text-center border-2 beveled transition-all duration-100 select-none min-h-[60px] text-xs leading-tight font-semibold uppercase';
+    'relative flex flex-col items-center justify-center p-2 text-center border-2 beveled transition-all duration-100 select-none min-h-[60px] text-xs leading-tight font-semibold uppercase';
 
   let stateClasses = '';
   let animation = '';
@@ -38,7 +38,14 @@ export function BingoSquare({ square, isWinning, onClick }: BingoSquareProps) {
     >
       <span className="wrap-break-word hyphens-auto">{square.text}</span>
       {square.isMarked && !square.isFreeSpace && (
-        <span className="absolute top-1 right-1 text-fire-yellow text-lg drop-shadow-[0_0_3px_rgba(255,170,0,1)]">⚡</span>
+        <>
+          <span className="absolute top-1 right-1 text-fire-yellow text-lg drop-shadow-[0_0_3px_rgba(255,170,0,1)]">⚡</span>
+          {square.personName && (
+            <span className="text-chrome-light text-[10px] mt-1 font-normal normal-case opacity-90 leading-tight">
+              {square.personName}
+            </span>
+          )}
+        </>
       )}
     </button>
   );
