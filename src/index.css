@@ -1,11 +1,96 @@
+@import url('https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600;700&family=Orbitron:wght@400;500;700;900&display=swap');
 @import 'tailwindcss';
 
 @theme {
-  --color-accent: #2563eb;
-  --color-accent-light: #3b82f6;
-  --color-marked: #dcfce7;
-  --color-marked-border: #22c55e;
-  --color-bingo: #fbbf24;
+  /* Dark metal backgrounds */
+  --color-metal-black: #0a0a0a;
+  --color-metal-darker: #1a1a1a;
+  --color-metal-dark: #2a2a2a;
+  --color-metal-gray: #3a3a3a;
+  
+  /* Electric accent colors */
+  --color-electric-blue: #00b4ff;
+  --color-electric-purple: #9d00ff;
+  --color-crimson: #dc143c;
+  --color-fire-red: #ff2400;
+  --color-fire-orange: #ff6600;
+  --color-fire-yellow: #ffaa00;
+  --color-lightning-purple: #8b00ff;
+  --color-molten-amber: #ffbf00;
+  
+  /* Chrome/metallic */
+  --color-chrome-light: #e8e8e8;
+  --color-chrome-mid: #b8b8b8;
+  --color-chrome-dark: #888888;
+  
+  /* Semantic mappings */
+  --color-accent: var(--color-fire-red);
+  --color-accent-light: var(--color-fire-orange);
+  --color-marked: var(--color-fire-red);
+  --color-marked-border: var(--color-fire-orange);
+  --color-bingo: var(--color-molten-amber);
+}
+
+/* Keyframe animations */
+@keyframes electricPulse {
+  0%, 100% {
+    box-shadow: 0 0 10px var(--color-electric-blue), 0 0 20px var(--color-electric-blue);
+    filter: brightness(1);
+  }
+  50% {
+    box-shadow: 0 0 20px var(--color-electric-blue), 0 0 40px var(--color-electric-blue), 0 0 60px var(--color-electric-purple);
+    filter: brightness(1.2);
+  }
+}
+
+@keyframes fireGlow {
+  0%, 100% {
+    box-shadow: 0 0 15px var(--color-fire-red), 0 0 30px var(--color-fire-orange);
+  }
+  50% {
+    box-shadow: 0 0 25px var(--color-fire-orange), 0 0 50px var(--color-fire-yellow), 0 0 75px var(--color-fire-red);
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+  20%, 40%, 60%, 80% { transform: translateX(2px); }
+}
+
+@keyframes lightningFlash {
+  0%, 10%, 20%, 100% { opacity: 1; }
+  5%, 15% { opacity: 0.7; }
+}
+
+@keyframes chromeShimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes scaleIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes explode {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) rotate(-10deg);
+  }
+  50% {
+    transform: scale(1.1) rotate(5deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
 }
 
 html,
@@ -16,6 +101,50 @@ body,
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: 'Teko', 'Orbitron', sans-serif;
   -webkit-tap-highlight-color: transparent;
+  background: radial-gradient(ellipse at center, #1a0a2e 0%, #0a0a0a 100%);
+  color: #e8e8e8;
+  font-weight: 500;
+}
+
+/* Chrome text effect */
+.chrome-text {
+  background: linear-gradient(135deg, #e8e8e8 0%, #ffffff 25%, #b8b8b8 50%, #ffffff 75%, #888888 100%);
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: chromeShimmer 3s linear infinite;
+}
+
+/* Glow shadow utilities */
+.shadow-glow-red {
+  box-shadow: 0 0 20px rgba(255, 36, 0, 0.6), 0 0 40px rgba(255, 102, 0, 0.4);
+}
+
+.shadow-glow-blue {
+  box-shadow: 0 0 20px rgba(0, 180, 255, 0.6), 0 0 40px rgba(157, 0, 255, 0.4);
+}
+
+.shadow-glow-amber {
+  box-shadow: 0 0 30px rgba(255, 191, 0, 0.8), 0 0 60px rgba(255, 170, 0, 0.6), 0 0 90px rgba(255, 191, 0, 0.4);
+}
+
+/* Text glow utilities */
+.text-glow-fire {
+  text-shadow: 0 0 10px var(--color-fire-orange), 0 0 20px var(--color-fire-red), 0 0 30px var(--color-fire-red);
+}
+
+.text-glow-electric {
+  text-shadow: 0 0 10px var(--color-electric-blue), 0 0 20px var(--color-electric-purple), 0 0 30px var(--color-lightning-purple);
+}
+
+.text-glow-amber {
+  text-shadow: 0 0 15px var(--color-molten-amber), 0 0 30px var(--color-fire-yellow), 0 0 45px var(--color-molten-amber);
+}
+
+/* Beveled edge effect */
+.beveled {
+  clip-path: polygon(5% 0%, 95% 0%, 100% 5%, 100% 95%, 95% 100%, 5% 100%, 0% 95%, 0% 5%);
 }
