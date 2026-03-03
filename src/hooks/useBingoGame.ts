@@ -10,7 +10,6 @@ import {
 export interface BingoGameState {
   gameState: GameState;
   board: BingoSquareData[];
-  winningLine: BingoLine | null;
   winningSquareIds: Set<number>;
   showBingoModal: boolean;
 }
@@ -200,7 +199,6 @@ export function useBingoGame(): BingoGameState & BingoGameActions {
   return {
     gameState,
     board,
-    winningLine,
     winningSquareIds,
     showBingoModal,
     startGame,
