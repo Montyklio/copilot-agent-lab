@@ -7,6 +7,8 @@ interface GameScreenProps {
   hasBingo: boolean;
   onSquareClick: (squareId: number) => void;
   onReset: () => void;
+  onOpenConnections: () => void;
+  connectionCount: number;
 }
 
 export function GameScreen({
@@ -15,6 +17,8 @@ export function GameScreen({
   hasBingo,
   onSquareClick,
   onReset,
+  onOpenConnections,
+  connectionCount,
 }: GameScreenProps) {
   return (
     <div className="flex flex-col min-h-full bg-linear-to-br from-metal-black via-metal-darker to-lightning-purple/20">
@@ -28,7 +32,18 @@ export function GameScreen({
           ← Back
         </button>
         <h1 className="chrome-text font-bold text-2xl" style={{ fontFamily: 'Orbitron, sans-serif' }}>SOC OPS</h1>
-        <div className="w-20"></div>
+        <button
+          onClick={onOpenConnections}
+          className="text-fire-orange text-lg px-4 py-2 border border-fire-orange/50 hover:bg-fire-orange/20 active:animate-[shake_0.2s_ease] uppercase tracking-wide beveled relative"
+          style={{ fontFamily: 'Teko, sans-serif', fontWeight: 600 }}
+        >
+          ⚡ {connectionCount}
+          {connectionCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-fire-red text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-glow-red">
+              {connectionCount}
+            </span>
+          )}
+        </button>
       </header>
 
       {/* Instructions */}

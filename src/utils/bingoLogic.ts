@@ -61,6 +61,64 @@ export function toggleSquare(board: BingoSquareData[], squareId: number): BingoS
 }
 
 /**
+ * Mark a square with an optional person name and timestamp
+ */
+export function markSquare(
+  board: BingoSquareData[],
+  squareId: number,
+  personName?: string
+): BingoSquareData[] {
+  return board.map((square) =>
+    square.id === squareId && !square.isFreeSpace
+      ? {
+          ...square,
+          isMarked: true,
+          personName: personName || undefined,
+          timestamp: Date.now(),
+        }
+      : square
+  );
+}
+
+/**
+ * Unmark a square, removing person name and timestamp
+ */
+export function unmarkSquare(board: BingoSquareData[], squareId: number): BingoSquareData[] {
+  return board.map((square) =>
+    square.id === squareId && !square.isFreeSpace
+      ? {
+          ...square,
+          isMarked: false,
+          personName: undefined,
+          timestamp: undefined,
+        }
+      : square
+  );
+}
+
+/**
+ * Update the person name for an already marked square
+ */
+export function updateSquareName(
+  board: BingoSquareData[],
+  squareId: number,
+  personName: string
+): BingoSquareData[] {
+  return board.map((square) =>
+    square.id === squareId && !square.isFreeSpace && square.isMarked
+      ? { ...square, personName: personName || undefined }
+      : square
+  );
+}
+
+/**
+ * Get all marked squares with their details for connections view
+ */
+export function getMarkedConnections(board: BingoSquareData[]): BingoSquareData[] {
+  return board.filter((square) => square.isMarked && !square.isFreeSpace);
+}
+
+/**
  * Get all possible winning lines
  */
 function getWinningLines(): BingoLine[] {

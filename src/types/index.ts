@@ -5,6 +5,8 @@ export interface BingoSquareData {
   text: string;
   isMarked: boolean;
   isFreeSpace: boolean;
+  personName?: string;
+  timestamp?: number;
 }
 
 export interface BingoLine {

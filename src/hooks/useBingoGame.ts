@@ -2,7 +2,10 @@ import { useState, useCallback, useMemo, useEffect } from 'react';
 import type { BingoSquareData, BingoLine, GameState } from '../types';
 import {
   generateBoard,
-  toggleSquare,
+  markSquare,
+  unmarkSquare,
+  updateSquareName,
+  getMarkedConnections,
   checkBingo,
   getWinningSquareIds,
 } from '../utils/bingoLogic';
@@ -13,17 +16,28 @@ export interface BingoGameState {
   winningLine: BingoLine | null;
   winningSquareIds: Set<number>;
   showBingoModal: boolean;
+  showNameCaptureModal: boolean;
+  showConnectionsView: boolean;
+  selectedSquareId: number | null;
+  connections: BingoSquareData[];
 }
 
 export interface BingoGameActions {
   startGame: () => void;
   handleSquareClick: (squareId: number) => void;
+  handleNameSave: (name: string) => void;
+  handleNameSkip: () => void;
+  handleUnmarkSquare: () => void;
+  cancelNameCapture: () => void;
   resetGame: () => void;
   dismissModal: () => void;
+  openConnectionsView: () => void;
+  closeConnectionsView: () => void;
+  editConnection: (squareId: number) => void;
 }
 
 const STORAGE_KEY = 'bingo-game-state';
-const STORAGE_VERSION = 1;
+const STORAGE_VERSION = 2;
 
 interface StoredGameData {
   version: number;
@@ -58,7 +72,9 @@ function validateStoredData(data: unknown): data is StoredGameData {
       typeof square.id === 'number' &&
       typeof square.text === 'string' &&
       typeof square.isMarked === 'boolean' &&
-      typeof square.isFreeSpace === 'boolean'
+      typeof square.isFreeSpace === 'boolean' &&
+      (square.personName === undefined || typeof square.personName === 'string') &&
+      (square.timestamp === undefined || typeof square.timestamp === 'number')
     );
   });
   
@@ -150,10 +166,18 @@ export function useBingoGame(): BingoGameState & BingoGameActions {
     () => loadedState?.winningLine || null
   );
   const [showBingoModal, setShowBingoModal] = useState(false);
+  const [showNameCaptureModal, setShowNameCaptureModal] = useState(false);
+  const [showConnectionsView, setShowConnectionsView] = useState(false);
+  const [selectedSquareId, setSelectedSquareId] = useState<number | null>(null);
 
   const winningSquareIds = useMemo(
     () => getWinningSquareIds(winningLine),
     [winningLine]
+  );
+
+  const connections = useMemo(
+    () => getMarkedConnections(board),
+    [board]
   );
 
   // Save game state to localStorage whenever it changes
@@ -168,13 +192,59 @@ export function useBingoGame(): BingoGameState & BingoGameActions {
   }, []);
 
   const handleSquareClick = useCallback((squareId: number) => {
+    const square = board.find((s) => s.id === squareId);
+    if (!square || square.isFreeSpace) return;
+
+    setSelectedSquareId(squareId);
+    setShowNameCaptureModal(true);
+  }, [board]);
+
+  const handleNameSave = useCallback((name: string) => {
+    if (selectedSquareId === null) return;
+
     setBoard((currentBoard) => {
-      const newBoard = toggleSquare(currentBoard, squareId);
+      const square = currentBoard.find((s) => s.id === selectedSquareId);
+      if (!square) return currentBoard;
+
+      let newBoard: BingoSquareData[];
       
-      // Check for bingo after toggling
+      if (square.isMarked) {
+        // Update existing name
+        newBoard = updateSquareName(currentBoard, selectedSquareId, name);
+      } else {
+        // Mark with name
+        newBoard = markSquare(currentBoard, selectedSquareId, name);
+        
+        // Check for bingo after marking
+        const bingo = checkBingo(newBoard);
+        if (bingo && !winningLine) {
+          queueMicrotask(() => {
+            setWinningLine(bingo);
+            setGameState('bingo');
+            setShowBingoModal(true);
+          });
+        }
+      }
+      
+      return newBoard;
+    });
+
+    setShowNameCaptureModal(false);
+    setSelectedSquareId(null);
+  }, [selectedSquareId, winningLine]);
+
+  const handleNameSkip = useCallback(() => {
+    if (selectedSquareId === null) return;
+
+    setBoard((currentBoard) => {
+      const square = currentBoard.find((s) => s.id === selectedSquareId);
+      if (!square || square.isMarked) return currentBoard;
+
+      const newBoard = markSquare(currentBoard, selectedSquareId);
+      
+      // Check for bingo after marking
       const bingo = checkBingo(newBoard);
       if (bingo && !winningLine) {
-        // Schedule state updates to avoid synchronous setState in effect
         queueMicrotask(() => {
           setWinningLine(bingo);
           setGameState('bingo');
@@ -184,17 +254,50 @@ export function useBingoGame(): BingoGameState & BingoGameActions {
       
       return newBoard;
     });
-  }, [winningLine]);
+
+    setShowNameCaptureModal(false);
+    setSelectedSquareId(null);
+  }, [selectedSquareId, winningLine]);
+
+  const handleUnmarkSquare = useCallback(() => {
+    if (selectedSquareId === null) return;
+
+    setBoard((currentBoard) => unmarkSquare(currentBoard, selectedSquareId));
+    setShowNameCaptureModal(false);
+    setSelectedSquareId(null);
+  }, [selectedSquareId]);
+
+  const cancelNameCapture = useCallback(() => {
+    setShowNameCaptureModal(false);
+    setSelectedSquareId(null);
+  }, []);
 
   const resetGame = useCallback(() => {
     setGameState('start');
     setBoard([]);
     setWinningLine(null);
     setShowBingoModal(false);
+    setShowNameCaptureModal(false);
+    setShowConnectionsView(false);
+    setSelectedSquareId(null);
   }, []);
 
   const dismissModal = useCallback(() => {
     setShowBingoModal(false);
+  }, []);
+
+  const openConnectionsView = useCallback(() => {
+    setShowConnectionsView(true);
+  }, []);
+
+  const closeConnectionsView = useCallback(() => {
+    setShowConnectionsView(false);
+  }, []);
+
+  const editConnection = useCallback((squareId: number) => {
+    setSelectedSquareId(squareId);
+    setShowConnectionsView(false);
+    setShowNameCaptureModal(true);
   }, []);
 
   return {
@@ -203,9 +306,20 @@ export function useBingoGame(): BingoGameState & BingoGameActions {
     winningLine,
     winningSquareIds,
     showBingoModal,
+    showNameCaptureModal,
+    showConnectionsView,
+    selectedSquareId,
+    connections,
     startGame,
     handleSquareClick,
+    handleNameSave,
+    handleNameSkip,
+    handleUnmarkSquare,
+    cancelNameCapture,
     resetGame,
     dismissModal,
+    openConnectionsView,
+    closeConnectionsView,
+    editConnection,
   };
 }
